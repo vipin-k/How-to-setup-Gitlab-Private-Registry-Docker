@@ -1,0 +1,48 @@
+-----------------------------------------------------------------------------
+							Docker Lab Server 
+----------------------------------------------------------------------------
+sudo apt-get update
+sudo apt install curl openssh-server postfix
+curl -sS https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | sudo bash
+sudo apt install gitlab-ce -y
+mkdir -p /etc/gitlab/ssl
+chmod 700 /etc/gitlab/ssl
+cd /etc/gitlab/ssl
+openssl req   -newkey rsa:4096 -nodes -sha256 -keyout /etc/gitlab/ssl/registry.vipin.com.key   -x509 -days 365 -out /etc/gitlab/ssl/registry.vipin.com.crt
+chmod 600 /etc/gitlab/ssl/registry.vipin.com.crt
+chmod 600 /etc/gitlab/ssl/registry.vipin.com.key 
+vi /etc/gitlab/gitlab.rb
+cd /etc/gitlab
+mv gitlab.rb gitlab01.rb
+vi /etc/hosts
+ping registry.vipin.com
+sudo gitlab-ctl reconfigure
+
+-----------------------------------------------------------------------------------
+				Docker Machine
+------------------------------------------------------------------------------------
+mkdir -p /etc/docker/certs.d/registry.vipin.com
+cp registry.vipin.com.crt registry.vipin.com.key /etc/docker/certs.d/registry.vipin.com/
+cd /etc/docker/certs.d/registry.vipin.com/
+service docker reload
+service docker stop
+service docker start
+docker login registry.vipin.com
+vi /etc/hosts
+rm -f registry.vipin.com.key
+mv registry.vipin.com.crt ca.crt
+service docker reload
+docker login registry.vipin.com
+docker logout registry.vipin.com
+docker pull bustbox
+docker images
+docker login registry.vipin.com
+docker images
+docker tag 3a093384ac30 registry.vipin.com/root/demo:latest
+docker images
+docker push registry.vipin.com/root/demo:latest
+docker rmi bustbox registry.vipin.com/root/demo
+docker images
+docker pull registry.vipin.com/root/demo:latest
+docker images
+-------------------------------------------------------------------------------------
